@@ -126,7 +126,7 @@ def parse_data(data: dict)->Prefixes:
 if __name__ == '__main__':
     data = get_remote_data()
     if data is not None:
-        print('Retrieved {} bytes in JSON data.'.format(len(data)))
+        print('Data retrieved.')
     else:
         print('No data retrieved')
 
