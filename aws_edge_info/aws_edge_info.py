@@ -1,12 +1,34 @@
 import urllib.request
 import json
 import traceback
+import ipaddress
+import random
+
 
 class Prefix:
     def __init__(self, ip_prefix: str, region: str, service: str):
         self.ip_prefix = ip_prefix
         self.region = region
         self.service = service
+
+    def contains_ip_address(self, ip_address: str)->bool:
+        result = False
+        try:
+            net = ipaddress.ip_network(self.ip_prefix)
+            ip = ipaddress.ip_address(ip_address)
+            result = ip in list(net.hosts())
+        except:
+            print('* Failed to calculate IP addresses\n{}'.format(traceback.format_exc()))
+        return result
+
+    def get_random_ip_address(self)->str:
+        result = None
+        try:
+            net = ipaddress.ip_network(self.ip_prefix)
+            result = str(random.choice(list(net.hosts())))
+        except:
+            print('* Failed to get a random IP address\n{}'.format(traceback.format_exc()))
+        return result
 
 
 class Prefixes:
@@ -44,11 +66,14 @@ class Prefixes:
     def get_region_names(self):
         result = list()
         for prefix in self.prefixes:
-            result.append(prefix.region)
+            if prefix.region not in result:
+                result.append(prefix.region)
         return result
 
-    def get_ip_prefix(self, region_filter: list=['us-east-1'], service_filter: list=['CLOUDFRONT']):
-        result = list()
+    def get_ip_prefix(self, region_filter: list=['us-east-1'], service_filter: list=['CLOUDFRONT'], result_as_prefixes: bool=True):
+        result = Prefixes()
+        if not result_as_prefixes:
+            result = list()
         if region_filter is None:
             region_filter = self.get_region_names()
         if len(region_filter) < 1:
@@ -58,8 +83,14 @@ class Prefixes:
         for prefix in self.prefixes:
             if prefix.region in region_filter:
                 if prefix.service in service_filter:
-                    result.append(prefix.ip_prefix)
+                    if not result_as_prefixes:
+                        result.append(prefix.ip_prefix)
+                    else:
+                        result.add_prefix(prefix=prefix)
         return result
+
+    def get_random_prefix(self)->Prefix:
+        return random.choice(self.prefixes)
 
 
 def get_remote_data()->dict:
