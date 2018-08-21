@@ -15,3 +15,5 @@ __pycache__/
 # other
 venv/
 .vscode
+.bash_profile
+terminal
